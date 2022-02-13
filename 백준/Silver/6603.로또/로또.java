@@ -3,50 +3,50 @@ import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
 public class Main {
-	
-	static int k;
 	static int [] src;
-	static int [] tgt = new int[6];
+	static int [] tgt;
+
+	static int N;
 	
+	static StringBuilder sb = new StringBuilder();
 	
 	public static void main(String[] args) throws Exception{
+		// TODO Auto-generated method stub
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		
 		
 		while(true) {
 			StringTokenizer st = new StringTokenizer(br.readLine());
-			k = Integer.parseInt(st.nextToken());
+			N = Integer.parseInt(st.nextToken());
 			
-			if (k==0) break;
+			if (N==0) break;
 			
-			src = new int[k];
+			//초기화
+			src = new int[N];
+			tgt = new int[6]; //6개 고정
 			
-			for (int i = 0; i < k; i++) {
+			for (int i = 0; i < N; i++) {
 				src[i] = Integer.parseInt(st.nextToken());
 			}
 			
 			comb(0, 0);
-			System.out.println();
+			sb.append("\n");
 		}
+		sb.setLength(sb.length()-2);
+		System.out.println(sb);
 	}
-	
 	static void comb(int srcIdx, int tgtIdx) {
-		StringBuilder sb = new StringBuilder();
-		
-		if(tgtIdx == 6) {
-			for (int num : tgt) {
-				sb.append(num).append(" ");
+		if (tgtIdx == 6) {
+			for (int i = 0; i < 6; i++) {
+				sb.append(tgt[i]).append(" ");
 			}
-			System.out.println(sb);
+			sb.append("\n");
 			return;
 		}
 		
-		//srcIdx 에 대한 기저조건
-		if(srcIdx == k) return;
-		
-		tgt[tgtIdx] = src[srcIdx];
-		
-		comb(srcIdx + 1, tgtIdx +1);
-		comb(srcIdx + 1, tgtIdx);
+		for (int i = srcIdx; i < N; i++) {
+			tgt[tgtIdx] = src[i];
+			comb(i+1, tgtIdx + 1);
+		}
 	}
+
 }
