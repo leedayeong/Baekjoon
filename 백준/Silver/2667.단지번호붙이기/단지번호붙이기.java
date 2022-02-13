@@ -1,29 +1,22 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Queue;
+import java.util.List;
 
 public class Main {
-
-	static char [][] map;
-	static int N, cnt;
-	static boolean[][] visit;
+	static int N , COUNT = 0;
+	static char[][] map;
+	static List <Integer> list = new ArrayList<>();
 	
-	static int[] dy = {-1, 1, 0, 0}; //상하좌우
-	static int[] dx = {0, 0, -1, 1};
-	
-	static Queue<Node> queue = new ArrayDeque<>();
-	static ArrayList<Integer> list = new ArrayList<>();
+	static int [] dy = {-1, 1, 0, 0}; // 상하좌우
+	static int [] dx = {0, 0, -1, 1};
 	
 	public static void main(String[] args) throws Exception{
-	
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		N = Integer.parseInt(br.readLine());
 		
-		map = new char[N][]; // toCharArray로 만들때에는 앞쪽에만 배열크기 지정함
-		visit = new boolean[N][N];
+		map = new char[N][];
 		
 		for (int i = 0; i < N; i++) {
 			map[i] = br.readLine().toCharArray();
@@ -31,53 +24,32 @@ public class Main {
 		
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
-				if(map[i][j] != '1' || visit[i][j] ) continue; //방문했거나 1이 아닌집은 continue!!
-				bfs(i, j);
-				
-				// cnt계산
-				list.add(cnt);
+				if(map[i][j] == '1') {
+					COUNT = 0;
+					find(i, j);
+					list.add(COUNT);
+				}
 			}
 		}
-		
 		Collections.sort(list);
-		
-		System.out.println(list.size());
-		
-		for (int num : list) {
-			System.out.println(num);
+		int size = list.size();
+		System.out.println(size);
+		for (int i = 0; i < size; i++) {
+			System.out.println(list.get(i));
 		}
-
-	}
-	static void bfs(int y, int x) {
-		cnt = 1; // 새로운 단지의 시작
-		visit[y][x] = true; //방문한 표시해줌
 		
-		queue.offer(new Node(y, x));
+	}
+	static void find(int i, int j) {
+		COUNT++;
+		map[i][j] = '0';
 		
-		while(!queue.isEmpty()) {
-			Node node = queue.poll();
-			
-			for (int i = 0; i < 4; i++) {//상하좌우
-				int ny = node.y + dy[i];
-				int nx = node.x + dx[i];
+		for (int d = 0; d < 4; d++) {
+			int ny = i + dy[d];
+			int nx = j + dx[d];
 				
-				if (ny < 0 || nx <0 || ny >= N || nx >= N) continue; // 범위 확인
-				if (map[ny][nx] != '1' || visit[ny][nx]) continue; // 집이 아니거나 집을 방문한 경우 continue;
-				
-				cnt ++; // 단지 수 증가!
-				visit[ny][nx] = true; //방문한 표시해줌
-				
-				queue.offer(new Node(ny, nx));
-			}
-		}
+			if(ny < 0 || nx < 0 || ny >= N || nx >= N) continue;
+			if(map[ny][nx] != '1') continue;
+			find(ny, nx);	
+		}		
 	}
-	
-	static class Node{
-		int y, x;
-		public Node(int y, int x) {
-			this.y = y;
-			this.x = x;
-		}
-	}
-
 }
