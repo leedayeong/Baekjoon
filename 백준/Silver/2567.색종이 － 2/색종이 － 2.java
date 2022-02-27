@@ -3,42 +3,50 @@ import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
 public class Main {
-	static int N, ans;
-	static boolean[][] map = new boolean[100][100];
+	static int N, T, ans;
+	static int [][] map;
 	
-	static int [] dy = {-1, 1, 0, 0}; //상하 좌우
+	static int [] dy = {-1, 1, 0, 0};//상하좌우
 	static int [] dx = {0, 0, -1, 1};
 	
 	public static void main(String[] args) throws Exception{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		T = Integer.parseInt(br.readLine());
 		
-		N = Integer.parseInt(br.readLine());
+		N = 100;
+		map = new int[N][N];
 		
-		for (int i = 0; i < N; i++) {
+		for (int t = 0; t < T; t++) {
 			StringTokenizer st = new StringTokenizer(br.readLine());
-			int sx = Integer.parseInt(st.nextToken());
-			int sy = Integer.parseInt(st.nextToken());
-			
-			for (int j = sy; j < sy + 10; j++) {
-				for (int k = sx; k < sx + 10; k++) {
-					map[j][k] = true;
+			int x = Integer.parseInt(st.nextToken());
+			int y = Integer.parseInt(st.nextToken());
+			for (int i = y; i < y+10; i++) {
+				for (int j = x; j < x+10; j++) {
+					map[i][j] = 1;
 				}
 			}
 		}
-
 		
-		for (int i = 0; i < 100; i++) {
-			for (int j = 0; j < 100; j++) {
-				if(map[i][j]){
-						for (int d = 0; d < 4; d++) {
-							int ny = i + dy[d];
-							int nx = j + dx[d];
-							if (ny < 0 || nx <0 || ny >=100 || nx >= 100 || map[ny][nx] == false) ans++; // 여기서는 오히려 범위의 끝에 있을때 둘레를 구해줘야함! 
-
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				if(map[i][j] == 1) {
+					
+					for (int d = 0; d < 4; d++) {
+						int ny = i + dy[d];
+						int nx = j + dx[d];
+						
+						if(ny<0 || nx<0 || ny>=N || nx>=N) {
+							ans++;
+							continue;
+						}
+						if(map[ny][nx]==1) continue;
+						ans++;
 					}
 				}
 			}
 		}
 		System.out.println(ans);
+		
 	}
+
 }
