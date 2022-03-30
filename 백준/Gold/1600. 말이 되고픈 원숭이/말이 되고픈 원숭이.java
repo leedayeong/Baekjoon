@@ -5,113 +5,87 @@ import java.util.Queue;
 import java.util.StringTokenizer;
 
 public class Main {
-	static int K, W, H, ans;
-	
+
+	static int K, W, H;
 	static int[][] map;
-	static boolean[][][] visit;
-	static Queue<Node> queue = new ArrayDeque<>(); 
-	
-	static int[] dy = {-1, 1, 0, 0};
-	static int[] dx = {0, 0, -1, 1};
-	
-	static int[] hy = {-1, -2, -2, -1, 1, 2, 2, 1};
-	static int[] hx = {2, 1, -1, -2, -2, -1, 1, 2};
-	
-	public static void main(String[] args) throws Exception{
+
+	static boolean[][][] visit; // y, x, k(말 이동 횟수)
+
+	static int[] dy = { -1, 1, 0, 0 };
+	static int[] dx = { 0, 0, -1, 1 };
+
+	static int[] hdy = { -2, -2, -1, -1, 1, 1, 2, 2 };
+	static int[] hdx = { 1, -1, 2, -2, 2, -2, 1, -1 };
+
+	static Queue<Node> queue = new ArrayDeque<Node>();
+
+	public static void main(String[] args) throws Exception {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		K = Integer.parseInt(br.readLine());
+
 		StringTokenizer st = new StringTokenizer(br.readLine());
-		
 		W = Integer.parseInt(st.nextToken());
 		H = Integer.parseInt(st.nextToken());
-		
+
 		map = new int[H][W];
-		
-		visit = new boolean[K+1][H][W];
-		
+		visit = new boolean[H][W][K + 1];
+
 		for (int i = 0; i < H; i++) {
 			st = new StringTokenizer(br.readLine());
 			for (int j = 0; j < W; j++) {
 				map[i][j] = Integer.parseInt(st.nextToken());
 			}
 		}
-		
-		
-		queue.offer(new Node(0, 0, K));
-		
-		for (int i = 0; i <= K ; i++) {
-			visit[i][0][0] = true;
-		}
-		
+
+		queue.offer(new Node(0, 0, 0, K));
 		bfs();
-
 	}
-	
-	public static void bfs() {
-		
-		while(!queue.isEmpty()) {
-			int size = queue.size();
 
-			for (int i = 0; i < size; i++) {
-				Node n = queue.poll();
-				visit[n.k][n.y][n.x] = true;
-				if(n.y == H-1 && n.x == W-1) {
-					// 도착
-					System.out.println(ans);
-					return;
-				}
-				
-				if(n.k > 0) {
-					// 일반적으로 가기
-					for (int d = 0; d < 4; d++) {
-						int ny = n.y + dy[d];
-						int nx = n.x + dx[d];
-						
-						if(ny < 0 || nx < 0 || ny >= H || nx >= W) continue;
-						if(map[ny][nx] == 1 || visit[n.k][ny][nx]) continue; 
-						visit[n.k][ny][nx] = true;
-						queue.offer(new Node(ny, nx, n.k));
-					}
-					// 말처럼 가기
-					for (int d = 0; d < 8; d++) {
-						int ny = n.y + hy[d];
-						int nx = n.x + hx[d];
-						
-						if(ny < 0 || nx < 0 || ny >= H || nx >= W) continue;
-						if(map[ny][nx] == 1 || visit[n.k-1][ny][nx]) continue; 
-						visit[n.k-1][ny][nx] = true;
-						queue.offer(new Node(ny, nx, n.k-1));
-					}
-				}else {
-					// 일반적으로 가기
-					for (int d = 0; d < 4; d++) {
-						int ny = n.y + dy[d];
-						int nx = n.x + dx[d];
-						
-						if(ny < 0 || nx < 0 || ny >= H || nx >= W) continue;
-						if(map[ny][nx] == 1 || visit[n.k][ny][nx]) continue; 
-						visit[n.k][ny][nx] = true;
-						queue.offer(new Node(ny, nx, n.k));
-					}
-				}
+	static void bfs() {
+		while (!queue.isEmpty()) {
+			Node node = queue.poll();
+
+			// 목표 도달 했는지 확인
+			if (node.y == H - 1 && node.x == W - 1) {
+				System.out.println(node.d);
+				return;
 			}
-			ans++;
+
+			// 탐색 #1 - 상하좌우
+			for (int d = 0; d < 4; d++) {
+				int ny = node.y + dy[d];
+				int nx = node.x + dx[d];
+
+				if (ny < 0 || nx < 0 || ny >= H || nx >= W || map[ny][nx] == 1 || visit[ny][nx][node.k]) continue;
+					
+				visit[ny][nx][node.k] = true;
+				queue.offer(new Node(ny, nx, node.d + 1, node.k)); // k는 그대로, d는 1 증가
+			}
+			
+			if(node.k == 0)  continue; //k 횟수 다쓴경우에는 말처럼 점프 못하기때문에 continue;
+			
+			// 탐색 #2 - 말 8방 (k횟수가 남아있을 때만)
+			for (int d = 0; d < 8; d++) {
+				int ny = node.y + hdy[d];
+				int nx = node.x + hdx[d];
+
+				// k를 1회 사용했다
+				if (ny < 0 || nx < 0 || ny >= H || nx >= W || map[ny][nx] == 1 || visit[ny][nx][node.k-1]) continue;
+				visit[ny][nx][node.k-1] = true;
+				queue.offer(new Node(ny, nx, node.d + 1, node.k-1)); // k -1감소 (말처럼 점프 한거임), d는 1 증가
+			}
 		}
-		// 도착 못하면
 		System.out.println(-1);
 	}
-	
-	
-	static class Node{
-		int y, x, k;
-		public Node (int y, int x, int k) {
+
+	static class Node {
+		int y, x, d, k;
+
+		public Node(int y, int x, int d, int k) {
 			this.y = y;
 			this.x = x;
+			this.d = d; // 깊이
 			this.k = k;
-		}
-		@Override
-		public String toString() {
-			return "Node [y=" + y + ", x=" + x + ", k=" + k + "]";
 		}
 	}
 }
