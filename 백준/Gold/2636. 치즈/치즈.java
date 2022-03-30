@@ -1,122 +1,106 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.StringTokenizer;
 
 public class Main {
-	static int N, M;
+	static int H, W, hour, cheese;
 	static int[][] map;
-	static int[] dy = {-1, 1, 0, 0}; //상하좌우
+	static boolean[][] visitAir;
+	static boolean[][] visitCheese;
+	
+	static int[] dy = {-1, 1, 0, 0};
 	static int[] dx = {0, 0, -1, 1};
+	
+	static Queue<Node> queueAir = new LinkedList<Node>();
+	static Queue<Node> queueBorder = new LinkedList<Node>(); //경계면에 있는 치즈
 	
 	public static void main(String[] args) throws Exception{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		StringTokenizer st = new StringTokenizer(br.readLine());
-		N = Integer.parseInt(st.nextToken());
-		M = Integer.parseInt(st.nextToken());
 		
-		map = new int[N][M];
-	
+		H = Integer.parseInt(st.nextToken());
+		W = Integer.parseInt(st.nextToken());
 		
-		for (int i = 0; i < N; i++) {
+		map = new int[H][W];
+		visitAir = new boolean[H][W];
+		visitCheese = new boolean[H][W];
+		
+		for (int i = 0; i < H; i++) {
 			st = new StringTokenizer(br.readLine());
-			for (int j = 0; j < M; j++) {
-				map[i][j] = Integer.parseInt(st.nextToken()) ;
+			for (int j = 0; j < W; j++) {
+				map[i][j] = Integer.parseInt(st.nextToken());
 			}
 		}
 		
 		
+		// bfs
+		visitAir[0][0] = true;
+		queueAir.offer(new Node(0, 0));
 		
-		
-		int time = 0;
-		int beforeCnt = 0;
 		while(true) {
-			int cheeseCnt = 0; // 치즈 수
-			int airCnt = 0; // 공기랑 접촉한 치즈 수 
-			// 노출된 공기만 표시 => 3으로
-			for (int i = 0; i < N; i++) {
-				for (int j = 0; j < M; j++) {
-					if(map[i][j] == 0 ) {
-						boolean chk = false;
-						for (int d = 0; d < 4; d++) {
-							int ny = i + dy[d];
-							int nx = j + dx[d];
-							if(ny >= N || nx >= M || ny < 0 || nx<0) {
-								chk = true;
-								break;
-							}
-							if(map[ny][nx]==3) {
-								chk = true;
-								break;
-							}
-						}
-						if(chk) bfs(i, j);
-					}
+			// 공기를 순회하면서 공기와 닿은 치즈를 찾아서 queueBorder 에 담는다. 
+			bfsAir();
+			// queueBorder에 더이상 없다 => break!
+			if(queueBorder.isEmpty()) break;
+			// queueBorder에서 치즈 => 공기로 전환 (queueAir)에 담는다! (cheese 수를 매번 새로 계산 => 매번 경계 치즈를 -> 공기로 전환)
+			bfsBorder();
+			// 1회 -> hour 1증가
+			hour++;
+		}
+		
+		System.out.println(hour);
+		System.out.println(cheese);
+		
+	}
+	static void bfsAir() {
+		while(! queueAir.isEmpty()) {
+			
+			Node n = queueAir.poll();
+			
+			for (int d = 0; d < 4; d++) {
+				int ny = n.y + dy[d];
+				int nx = n.x + dx[d];
+				
+				if(ny < 0 || nx < 0 || ny >= H || nx >= W || visitAir[ny][nx]) continue;
+				
+				// 공기
+				if(map[ny][nx] == 0) {
+					visitAir[ny][nx] = true;
+					queueAir.add(new Node(ny, nx));
+					continue;
 				}
-			}
-	
-			// 치즈 갯수, 공기랑 접촉한 치즈 수 세기
-			for (int i = 0; i < N; i++) {
-				for (int j = 0; j < M; j++) {
-					if(map[i][j] == 3) {
-						for (int d = 0; d < 4; d++) {
-							int ny = i + dy[d];
-							int nx = j + dx[d];
-							if(ny >= N || nx >= M || ny <0 || nx<0) continue;
-							if(map[ny][nx] == 1) {
-								airCnt ++;
-								map[ny][nx] = 2;
-							}
-						}
-					}else if(map[i][j] == 1) cheeseCnt++;
+				// 공기와 맞닿은 치즈
+				if( map[ny][nx] == 1) {
+					if(visitCheese[ny][nx] ) continue; // 다른 공기에 의해서 치즈가 이미 발견되었다면..
+					visitCheese[ny][nx] = true;
+					queueBorder.offer(new Node(ny, nx));
 				}
+				
 			}
-			
-//			for (int i = 0; i < N; i++) {
-//				System.out.println();
-//				for (int j = 0; j < M; j++) {
-//					System.out.print(map[i][j]+ " ");
-//				}
-//			}
-
-			if(cheeseCnt + airCnt== 0) { //총 치즈 수
-				System.out.println(time);
-				System.out.println(beforeCnt);
-				break;
-			}
-			
-//			System.out.println("==================");
-//			System.out.println("time: "+time);
-//			System.out.println("cheese: " + cheeseCnt);
-//			System.out.println("air : " + airCnt);
-//			System.out.println("before" + cheeseCnt);
-
-			
-			int tmpCnt = 0;
-			// 공기랑 접촉한 치즈 없애기
-			outer : for (int i = 0; i < N; i++) {
-				for (int j = 0; j < M; j++) {
-					if(map[i][j] == 2) {
-						map[i][j] = 3;
-						if(++tmpCnt == airCnt) break outer;	
-					}
-				}
-			}
-			
-			time++;
-			beforeCnt = airCnt;
 		}
 	}
 	
-	public static void bfs(int y, int x) {
-		map[y][x] = 3;
+	// 경계면 치즈 => 공기로 바뀜
+	// 매번 남아있는 치즈를 새롭게 계산 (즉, 경계면 치즈 -> 공기) 로 변환하는 횟수를 계산
+	static void bfsBorder() {
+		cheese = 0;
 		
-		for (int d = 0; d < 4; d++) {
-			int ny = y + dy[d];
-			int nx = x + dx[d];
-			
-			if(ny >= N || nx >= M || ny < 0 || nx< 0) continue;
-			if(map[ny][nx] == 3 || map[ny][nx] == 1) continue;
-			bfs(ny, nx);
+		while(!queueBorder.isEmpty()) {
+			Node n = queueBorder.poll();
+			visitAir[n.y][n.x] = true;
+			queueAir.offer(n);
+			cheese++;
+		}
+	}
+	
+	
+	static class Node{
+		int y, x;
+		public Node (int y, int x) {
+			this.y = y;
+			this.x = x;
 		}
 	}
 }
